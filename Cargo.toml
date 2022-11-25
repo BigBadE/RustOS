@@ -1,0 +1,32 @@
+[package]
+name = "os"
+version = "0.1.0"
+edition = "2021"
+
+build = "build.rs"
+
+[workspace]
+members = ["kernel"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[dependencies]
+bootloader_api = "0.11.0-beta"
+ovmf-prebuilt = "0.1.0-alpha.1"
+
+[build-dependencies]
+bootloader = "0.11.0-beta.1"
+kernel = { path = "kernel", artifact = "bin", target = "x86_64-unknown-none" }
+
+[package.metadata.bootimage]
+run-args = ["-device", "isa-debug-exit,iobase=0xf4,iosize=0x04", "-display", "none"]
+
+[patch.crates-io]
+# temporary solution to funty@1.2.0 being yanked, we should propose bitvec upgrade to upstream filecoin crates
+# tracking issue: https://github.com/bitvecto-rs/funty/issues/7
+funty = { git = "https://github.com/bitvecto-rs/funty/", rev = "7ef0d890fbcd8b3def1635ac1a877fc298488446" }
+
+[profile.dev]
+panic = "abort"
+
+[profile.release]
+panic = "abort"
