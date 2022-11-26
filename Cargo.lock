@@ -58,9 +58,7 @@ dependencies = [
 
 [[package]]
 name = "bootloader"
-version = "0.11.0-beta.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0827f3fdeb087e90726e18f74dd21c770d26dbef454ac1755ed1258cd12ebe19"
+version = "0.11.0-alpha"
 dependencies = [
  "anyhow",
  "fatfs",
@@ -76,7 +74,7 @@ version = "0.11.0-beta"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1b18b356f44cfbb176c503138dced66b5aec70b91aca3bfc7ca4190f45df2bba"
 dependencies = [
- "bootloader_api",
+ "bootloader_api 0.11.0-beta",
  "conquer-once",
  "log",
  "noto-sans-mono-bitmap",
@@ -88,6 +86,10 @@ dependencies = [
  "x86_64",
  "xmas-elf",
 ]
+
+[[package]]
+name = "bootloader_api"
+version = "0.1.0-alpha.0"
 
 [[package]]
 name = "bootloader_api"
@@ -320,8 +322,9 @@ name = "kernel"
 version = "0.1.0"
 dependencies = [
  "bootloader-x86_64-common",
- "bootloader_api",
+ "bootloader_api 0.1.0-alpha.0",
  "log",
+ "noto-sans-mono-bitmap",
 ]
 
 [[package]]
@@ -412,7 +415,7 @@ name = "os"
 version = "0.1.0"
 dependencies = [
  "bootloader",
- "bootloader_api",
+ "bootloader_api 0.1.0-alpha.0",
  "kernel",
  "ovmf-prebuilt",
 ]

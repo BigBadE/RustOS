@@ -5,9 +5,10 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
-bootloader_api = "0.11.0-beta"
+bootloader_api = { path = "../../bootloader/api" }
 bootloader-x86_64-common = "0.11.0-beta"
 log = "0.4.17"
+noto-sans-mono-bitmap = "0.2.0"
 
 [package.metadata.bootimage]
 run-args = ["-device", "isa-debug-exit,iobase=0xf4,iosize=0x04", "-display", "none"]
