@@ -24,7 +24,7 @@ fn kernel_main(boot_info: &'static mut bootloader_api::BootInfo) -> ! {
         _ => panic!()
     };
 
-    let allocator = Allocator::new(&mut boot_info.memory_regions);
+    let allocator = unsafe { Allocator::new(&mut boot_info.memory_regions) };
 
     //display.clear();
 
