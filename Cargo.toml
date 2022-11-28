@@ -6,7 +6,9 @@ edition = "2021"
 build = "build.rs"
 
 [workspace]
-members = ["kernel"]
+members = [
+    "kernel"
+]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]

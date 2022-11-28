@@ -1,45 +1,42 @@
 #![no_std]
 #![no_main]
-#![feature(once_cell)]
+#![feature(once_cell, abi_x86_interrupt, panic_info_message)]
 
 use core::panic::PanicInfo;
-use bootloader_api::info::{MemoryRegion, Optional};
-use crate::display::screen::Screen;
-use crate::memory::allocator::Allocator;
 use log::log;
 
 mod display;
 mod memory;
+mod interrupts;
 
 /// This function is called on panic.
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
-    log!(info.message().unwrap().as_str().unwrap());
-    loop {}
+    match info.message() {
+        Some(message) =>
+            println!("Error: {}", message),
+        None => println!("Panic detected")
+    }
+
+    hlt_loop();
 }
 
 fn kernel_main(boot_info: &'static mut bootloader_api::BootInfo) -> ! {
-    let mut display = match boot_info.framebuffer.as_mut() {
-        Some(value) => Screen::new(value),
-        _ => panic!()
-    };
+    boot_info.framebuffer.as_mut().unwrap().buffer_mut().fill(0);
 
-    let allocator = unsafe { Allocator::new(&mut boot_info.memory_regions) };
+    //Init interrupts
+    interrupts::init();
 
-    //display.clear();
+    log!(log::Level::Info, "Println!");
 
-    let info = display.framebuffer.info();
 
-    //Writer::new(display.framebuffer.buffer_mut(), info).write("Testing 123");
-
-    panic!();
+    hlt_loop();
 }
 
 bootloader_api::entry_point!(kernel_main);
 
-fn unwrap<T>(optional: Optional<T>) -> T {
-    match optional {
-        Optional::Some(found) => found,
-        Optional::None => panic!()
+pub fn hlt_loop() -> ! {
+    loop {
+        x86_64::instructions::hlt();
     }
 }

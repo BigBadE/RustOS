@@ -7,8 +7,19 @@ edition = "2021"
 [dependencies]
 bootloader_api = { path = "../../bootloader/api" }
 bootloader-x86_64-common = "0.11.0-beta"
+
+# Device specific
+x86_64 = "0.14.10"
+pic8259 = "0.10.1"
+uart_16550 = "0.2.18"
+
+# Logging
 log = "0.4.17"
-noto-sans-mono-bitmap = "0.2.0"
+
+# Helper
+lazy_static = { version = "1.0.1", features = ["spin_no_std"] }
+spin = "0.9.4"
+volatile = "0.2.6"
 
 [package.metadata.bootimage]
 run-args = ["-device", "isa-debug-exit,iobase=0xf4,iosize=0x04", "-display", "none"]
