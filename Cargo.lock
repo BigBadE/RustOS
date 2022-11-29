@@ -70,11 +70,9 @@ dependencies = [
 
 [[package]]
 name = "bootloader-x86_64-common"
-version = "0.11.0-beta"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1b18b356f44cfbb176c503138dced66b5aec70b91aca3bfc7ca4190f45df2bba"
+version = "0.1.0-alpha.0"
 dependencies = [
- "bootloader_api 0.11.0-beta",
+ "bootloader_api",
  "conquer-once",
  "log",
  "noto-sans-mono-bitmap",
@@ -90,12 +88,6 @@ dependencies = [
 [[package]]
 name = "bootloader_api"
 version = "0.1.0-alpha.0"
-
-[[package]]
-name = "bootloader_api"
-version = "0.11.0-beta"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2abd80df6ece4c1a35bbf9bc7ffcbfd9b9ced7f8a0c996dcfb84fd5ba34aab07"
 
 [[package]]
 name = "build_const"
@@ -322,11 +314,14 @@ name = "kernel"
 version = "0.1.0"
 dependencies = [
  "bootloader-x86_64-common",
- "bootloader_api 0.1.0-alpha.0",
+ "bootloader_api",
+ "conquer-once",
  "lazy_static",
  "log",
+ "noto-sans-mono-bitmap",
  "pic8259",
  "spin 0.9.4",
+ "spinning_top",
  "uart_16550",
  "volatile 0.2.7",
  "x86_64",
@@ -429,7 +424,7 @@ name = "os"
 version = "0.1.0"
 dependencies = [
  "bootloader",
- "bootloader_api 0.1.0-alpha.0",
+ "bootloader_api",
  "kernel",
  "ovmf-prebuilt",
 ]
