@@ -1,10 +1,8 @@
 use core::fmt;
 use core::fmt::Write;
-use lazy_static::lazy_static;
-use log::{Level, log, RecordBuilder};
-use spin::Mutex;
-use uart_16550::SerialPort;
-use crate::display;
+use log::{log, RecordBuilder};
+use x86_64::instructions::interrupts;
+use crate::LOGGER;
 
 #[macro_export]
 macro_rules! print {
@@ -19,7 +17,14 @@ macro_rules! println {
 
 #[doc(hidden)]
 pub fn _print(args: fmt::Arguments) {
-    //interrupts::without_interrupts(|| {
-    display::vga::VGA_WRITER.lock().write_fmt(args).unwrap();
-    //});
+    interrupts::without_interrupts(|| {
+        LOGGER.get().unwrap().0.lock().write_fmt(args).unwrap();
+        writeln!(serial(), "Testing!").expect("Failed serial");
+    });
+}
+
+pub fn serial() -> uart_16550::SerialPort {
+    let mut port = unsafe { uart_16550::SerialPort::new(0x3F8) };
+    port.init();
+    port
 }

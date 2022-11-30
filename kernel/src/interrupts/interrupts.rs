@@ -10,9 +10,13 @@ lazy_static! {
             idt.double_fault.set_handler_fn(double_fault_handler)
                 .set_stack_index(crate::interrupts::gdt::DOUBLE_FAULT_IST_INDEX); // new
         }
-idt[InterruptIndex::Timer.as_usize()]
-            .set_handler_fn(timer_interrupt_handler);
 
+        for i in 0..7 {
+            idt[i].set_handler_fn(timer_interrupt_handler);
+        }
+        for i in 32..(32+16) {
+            idt[i].set_handler_fn(timer_interrupt_handler);
+        }
         idt
     };
 }
