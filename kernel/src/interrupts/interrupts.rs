@@ -32,7 +32,7 @@ lazy_static! {
     idt.vmm_communication_exception.set_handler_fn(vmm_communication_handler);
     idt.security_exception.set_handler_fn(security_handler);
     idt[InterruptIndex::Timer.as_usize()].set_handler_fn(timer_interrupt_handler);
-        idt
+        return idt;
     };
 }
 
@@ -40,6 +40,21 @@ lazy_static! {
 #[repr(u8)]
 pub enum InterruptIndex {
     Timer = pic8259_interrupts::PIC_1_OFFSET,
+    Keyboard = pic8259_interrupts::PIC_1_OFFSET + 1,
+    Secondary = pic8259_interrupts::PIC_1_OFFSET + 2,
+    SerialPort2 = pic8259_interrupts::PIC_1_OFFSET + 3,
+    SerialPort1 = pic8259_interrupts::PIC_1_OFFSET + 4,
+    ParallelPort2 = pic8259_interrupts::PIC_1_OFFSET + 5,
+    FloppyDisk = pic8259_interrupts::PIC_1_OFFSET + 6,
+    ParallelPort1 = pic8259_interrupts::PIC_1_OFFSET + 7,
+    RealTimeClock = pic8259_interrupts::PIC_2_OFFSET,
+    ACPI = pic8259_interrupts::PIC_2_OFFSET + 1,
+    Available1 = pic8259_interrupts::PIC_2_OFFSET + 2,
+    Available2 = pic8259_interrupts::PIC_2_OFFSET + 3,
+    Mouse = pic8259_interrupts::PIC_2_OFFSET + 4,
+    CoProcessor = pic8259_interrupts::PIC_2_OFFSET + 5,
+    PrimaryATA = pic8259_interrupts::PIC_2_OFFSET + 6,
+    SecondaryATA = pic8259_interrupts::PIC_2_OFFSET + 7,
 }
 
 impl InterruptIndex {
@@ -96,7 +111,8 @@ extern "x86-interrupt" fn invalid_tss_handler(stack_frame: InterruptStackFrame, 
     panic!("EXCEPTION: INVALID TSS\n{:#?}", stack_frame);
 }
 
-extern "x86-interrupt" fn segment_not_present_handler(stack_frame: InterruptStackFrame, _error_code: u64) {
+extern "x86-interrupt" fn segment_not_present_handler(stack_frame: InterruptStackFrame, error_code: u64) {
+    println!("Error code: {}", error_code);
     panic!("EXCEPTION: SEGMENT NOT PRESENT\n{:#?}", stack_frame);
 }
 

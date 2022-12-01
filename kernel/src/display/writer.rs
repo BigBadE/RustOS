@@ -19,7 +19,7 @@ macro_rules! println {
 pub fn _print(args: fmt::Arguments) {
     interrupts::without_interrupts(|| {
         LOGGER.get().unwrap().0.lock().write_fmt(args).unwrap();
-        writeln!(serial(), "Testing!").expect("Failed serial");
+        serial().write_fmt(args).expect("Failed serial");
     });
 }
 

@@ -1,90 +1,141 @@
-use bootloader_api::info::{MemoryRegion, MemoryRegionKind, MemoryRegions};
-use crate::memory::memory_block::{MemoryBlock};
+use core::alloc::{GlobalAlloc, Layout};
+use core::{mem, ptr};
+use core::ptr::NonNull;
+use linked_list_allocator::Heap;
+use spin::Mutex;
+use x86_64::structures::paging::{FrameAllocator, Mapper, Page, PageTableFlags, Size4KiB};
+use x86_64::structures::paging::mapper::MapToError;
+use x86_64::VirtAddr;
+use crate::memory::blocks::FixedSizeBlock;
 
-pub struct Allocator {
-    length: u8,
-    block: *mut MemoryBlock,
+#[global_allocator]
+pub static ALLOCATOR: LockedAllocator = LockedAllocator::new();
+
+const BLOCK_SIZES: &[usize] = &[8, 16, 32, 64, 128, 256, 512, 1024, 2048];
+
+pub const HEAP_START: usize = 0x_4444_4444_0000;
+pub const HEAP_SIZE: usize = 100 * 1024; // 100 KiB
+
+pub struct LockedAllocator {
+    default: Mutex<DefaultAllocator>,
 }
 
-unsafe impl Sync for Allocator {}
+struct DefaultAllocator {
+    list_heads: [Option<&'static mut FixedSizeBlock>; BLOCK_SIZES.len()],
+    fallback_allocator: linked_list_allocator::Heap,
+}
 
-impl Allocator {
-    pub unsafe fn new(memory: &mut MemoryRegions) -> Self {
-        let mut block = 0 as *mut MemoryBlock;
-
-        for i in 0..memory.len() {
-            let mut region: MemoryRegion = *(memory).get_mut(i).unwrap();
-            if region.kind == MemoryRegionKind::Usable {
-                let length = region.end - region.start;
-                core::ptr::write(region.start as *mut MemoryBlock,
-                                 MemoryBlock::new(length, block));
-                block = region.start as *mut MemoryBlock;
-            }
-        }
-
-        return Allocator {
-            length: memory.len() as u8,
-            block,
+impl DefaultAllocator {
+    pub const fn new() -> Self {
+        const EMPTY: Option<&'static mut FixedSizeBlock> = Option::None;
+        return DefaultAllocator {
+            list_heads: [EMPTY; BLOCK_SIZES.len()],
+            fallback_allocator: Heap::empty(),
         };
     }
 
-    unsafe fn alloc(&self, size: u64) -> *mut u8 {
-        let mut block = *self.block;
-        let mut last = MemoryBlock::empty();
-
-        // Find a suitable block
-        loop {
-            if block.size >= size + 8 {
-                // Get the block header
-                let start = &mut block as *mut MemoryBlock as *mut u64;
-                if block.size < size + 8 {
-                    // Shrink the block and relocate the header
-                    let end = start as u64 + 8 + size as u64;
-                    block.size -= size + 8;
-                    last.next = end as *mut MemoryBlock;
-                    core::ptr::write(last.next, block);
-                } else {
-                    //Skip the block
-                    last.next = block.next;
-                }
-                //Write size to start of block
-                core::ptr::write(start, block.size);
-                return (start as u64 + 8) as *mut u8;
-            }
-            //Loop if there's another
-            if block.next as u64 != 0 {
-                last = block;
-                block = *block.next;
-            } else {
-                break;
-            }
-        }
-
-        return 0 as *mut u8;
+    pub unsafe fn init(&mut self) {
+        self.fallback_allocator.init(HEAP_START as *mut u8, HEAP_SIZE);
     }
 
-    unsafe fn dealloc(&self, _ptr: *mut u8) {
-        //Find the size of the block
-        let start = (_ptr as u64 - 8) as *mut u64;
-        //Create the new header and insert it
-        let mut block = MemoryBlock::new(core::ptr::read(start), self.block);
-        let start = start as *mut MemoryBlock;
-        core::ptr::write(start, block);
-        //Insert our block before the last one
-        block.next = (*self.block).next;
-        (*self.block).next = start;
+    unsafe fn alloc(&mut self, layout: Layout) -> *mut u8 {
+        match list_index(&layout) {
+            Some(index) => {
+                match self.list_heads[index].take() {
+                    Some(node) => {
+                        self.list_heads[index] = node.next.take();
+                        node as *mut FixedSizeBlock as *mut u8
+                    }
+                    None => {
+                        // no block exists in list => allocate new block
+                        let block_size = BLOCK_SIZES[index];
+                        // only works if all block sizes are a power of 2
+                        let block_align = block_size;
+                        let layout = Layout::from_size_align(block_size, block_align).unwrap();
+                        self.fallback_alloc(layout)
+                    }
+                }
+            }
+            None => self.fallback_alloc(layout),
+        }
+    }
+
+    unsafe fn dealloc(&mut self, ptr: *mut u8, layout: Layout) {
+        match list_index(&layout) {
+            Some(index) => {
+                let new_node = FixedSizeBlock {
+                    next: self.list_heads[index].take(),
+                };
+
+                let new_node_ptr = ptr as *mut FixedSizeBlock;
+                new_node_ptr.write(new_node);
+                self.list_heads[index] = Some(&mut *new_node_ptr);
+            }
+            None => {
+                let ptr = NonNull::new(ptr).unwrap();
+                self.fallback_allocator.deallocate(ptr, layout);
+            }
+        }
+    }
+
+    /// Allocates using the fallback allocator.
+    fn fallback_alloc(&mut self, layout: Layout) -> *mut u8 {
+        match self.fallback_allocator.allocate_first_fit(layout) {
+            Ok(ptr) => ptr.as_ptr(),
+            Err(_) => ptr::null_mut(),
+        }
     }
 }
 
-fn get_index(length: u64) -> usize {
-    if length > 128 {
-        return 4;
-    } else if length > 64 {
-        return 3;
-    } else if length > 32 {
-        return 2;
-    } else if length > 16 {
-        return 1;
+unsafe impl GlobalAlloc for LockedAllocator {
+    unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
+        return self.default.lock().alloc(layout);
     }
-    return 0;
+
+    unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
+        return self.default.lock().dealloc(ptr, layout);
+    }
+}
+
+impl LockedAllocator {
+    pub const fn new() -> Self {
+        return LockedAllocator {
+            default: Mutex::new(DefaultAllocator::new())
+        };
+    }
+
+    pub fn init(&self, mapper: &mut impl Mapper<Size4KiB>, frame_allocator: &mut impl FrameAllocator<Size4KiB>) -> Result<(), MapToError<Size4KiB>> {
+        let page_range = {
+            let heap_start = VirtAddr::new(HEAP_START as u64);
+            let heap_end = heap_start + HEAP_SIZE - 1u64;
+            let heap_start_page = Page::containing_address(heap_start);
+            let heap_end_page = Page::containing_address(heap_end);
+            Page::range_inclusive(heap_start_page, heap_end_page)
+        };
+
+        for page in page_range {
+            let frame = frame_allocator
+                .allocate_frame()
+                .ok_or(MapToError::FrameAllocationFailed)?;
+            let flags = PageTableFlags::PRESENT | PageTableFlags::WRITABLE;
+            unsafe {
+                mapper.map_to(page, frame, flags, frame_allocator)?.flush()
+            };
+        }
+
+        unsafe {
+            self.default.lock().init();
+        }
+        Ok(())
+    }
+}
+
+fn list_index(layout: &Layout) -> Option<usize> {
+    let required_block_size = layout.size().max(layout.align());
+    BLOCK_SIZES.iter().position(|&s| s >= required_block_size)
+}
+
+#[alloc_error_handler]
+pub fn alloc_error_handler(_: core::alloc::Layout) -> ! {
+    panic!("Allocator error!");
 }

@@ -1,2 +1,18 @@
+use bootloader_api::info::MemoryRegions;
+use x86_64::VirtAddr;
+use crate::{BootInfoFrameAllocator};
+
 pub mod allocator;
-pub mod memory_block;
+pub mod paging;
+
+mod blocks;
+
+pub fn init(memory_offset: u64, memory_regions: &'static MemoryRegions) {
+    unsafe {
+        let mut pages = paging::init(VirtAddr::new(
+            memory_offset));
+        let mut frame_allocator = BootInfoFrameAllocator::init(memory_regions);
+
+        allocator::ALLOCATOR.init(&mut pages, &mut frame_allocator).unwrap();
+    };
+}

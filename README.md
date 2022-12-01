@@ -10,3 +10,15 @@ Nightly channel
 
 Install QEMU and set the environmental variable QEMU to the path to its
 installation folder.
+
+# TODO
+
+- ~~Basic booting~~
+- ~~Hardware interrupts~~
+- Default block ALLOCATOR
+- Backup linked ALLOCATOR
+- Async/Await
+- File system
+- Userspace programs
+- Std
+- Stack unwinding/debugging

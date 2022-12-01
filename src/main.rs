@@ -13,6 +13,7 @@ fn main() {
     } else {
         cmd.arg("-drive").arg(format!("format=raw,file={bios_path}"));
     }
+    cmd.arg("-serial").arg("stdio");
     let mut child = cmd.spawn().unwrap();
     child.wait().unwrap();
 }

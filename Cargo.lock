@@ -324,6 +324,7 @@ dependencies = [
  "bootloader_api",
  "conquer-once",
  "lazy_static",
+ "linked_list_allocator",
  "log",
  "noto-sans-mono-bitmap",
  "pic8259",
@@ -356,6 +357,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9272ab7b96c9046fbc5bc56c06c117cb639fe2d509df0c421cad82d2915cf369"
 dependencies = [
  "cc",
+]
+
+[[package]]
+name = "linked_list_allocator"
+version = "0.10.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e322f259d225fbae43a1b053b2dc6a5968a6bdf8b205f5de684dab485b95030e"
+dependencies = [
+ "spinning_top",
 ]
 
 [[package]]
