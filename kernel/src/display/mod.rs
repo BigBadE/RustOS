@@ -1,5 +1,5 @@
 use bootloader_api::info::FrameBuffer;
-use crate::{LockedLogger, LOGGER, println};
+use macros::{LockedLogger, LOGGER, println};
 
 pub mod writer;
 

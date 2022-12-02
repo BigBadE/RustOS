@@ -8,6 +8,7 @@ build = "build.rs"
 [workspace]
 members = [
     "kernel",
+    "macros",
     "include",
     "include/testing"
 ]

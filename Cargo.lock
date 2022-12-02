@@ -376,8 +376,8 @@ dependencies = [
  "lazy_static",
  "linked_list_allocator",
  "log",
+ "macros",
  "pc-keyboard",
- "pci-driver",
  "pic8259",
  "spin 0.9.4",
  "spinning_top",
@@ -445,6 +445,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "macros"
+version = "0.1.0"
+dependencies = [
+ "bootloader-x86_64-common",
+ "bootloader_api",
+ "conquer-once",
+ "spinning_top",
+ "uart_16550",
+ "x86_64",
+]
+
+[[package]]
 name = "mbrman"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -455,17 +467,6 @@ dependencies = [
  "serde",
  "serde-big-array",
  "thiserror",
-]
-
-[[package]]
-name = "nix"
-version = "0.24.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "195cdbc1741b8134346d515b3a56a1c94b0912758009cfd53f99ea0f57b065fc"
-dependencies = [
- "bitflags",
- "cfg-if",
- "libc",
 ]
 
 [[package]]
@@ -521,16 +522,6 @@ name = "pc-keyboard"
 version = "0.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e0ad9805165d0672a3efa682cac952870d8b05d98e02e08063ca7db597005338"
-
-[[package]]
-name = "pci-driver"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "10302a0ab2d8a39eaeed918550e3750fc19c1c245b6eb77c1886475b6a6dd39f"
-dependencies = [
- "nix",
- "num-traits",
-]
 
 [[package]]
 name = "pic8259"

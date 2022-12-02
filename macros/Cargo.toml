@@ -1,0 +1,12 @@
+[package]
+name = "macros"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bootloader_api = "0.11.0-beta.4"
+x86_64 = "0.14.10"
+bootloader-x86_64-common = "0.11.0-beta.4"
+uart_16550 = "0.2.10"
+spinning_top = "0.2.4"
+conquer-once = { version = "0.3.2", default-features = false }

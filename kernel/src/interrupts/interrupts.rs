@@ -2,7 +2,7 @@ use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame, Pag
 use lazy_static::lazy_static;
 use x86_64::instructions::port::Port;
 use crate::interrupts::pic8259_interrupts;
-use crate::{print, println};
+use crate::println;
 use crate::drivers::keyboard;
 
 lazy_static! {

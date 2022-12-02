@@ -1,19 +1,14 @@
 #![no_std]
 #![no_main]
-#![feature(once_cell, abi_x86_interrupt, panic_info_message, alloc_error_handler, const_mut_refs)]
+#![feature(abi_x86_interrupt, panic_info_message, alloc_error_handler, const_mut_refs)]
 
-use alloc::boxed::Box;
 use core::panic::PanicInfo;
 use bootloader_api::BootloaderConfig;
 use bootloader_api::config::Mapping;
-use bootloader_api::info::{FrameBufferInfo, Optional};
-use bootloader_x86_64_common::logger::Logger;
-use spinning_top::Spinlock;
-use conquer_once::spin::OnceCell;
-use x86_64::VirtAddr;
-use crate::allocator::LockedAllocator;
-use crate::memory::allocator;
+use bootloader_api::info::Optional;
 use crate::memory::paging::BootInfoFrameAllocator;
+
+pub use macros::{print, println};
 
 mod display;
 mod drivers;
@@ -23,10 +18,6 @@ mod threading;
 
 extern crate alloc;
 
-pub static LOGGER: OnceCell<LockedLogger> = OnceCell::uninit();
-
-pub struct LockedLogger(Spinlock<Logger>);
-
 pub const BOOTLOADER_CONFIG: BootloaderConfig = {
     let mut config = BootloaderConfig::new_default();
     config.mappings.dynamic_range_start = Some(0xffff_8000_0000_0000);
@@ -34,17 +25,9 @@ pub const BOOTLOADER_CONFIG: BootloaderConfig = {
     config
 };
 
-
-impl LockedLogger {
-    /// Create a new instance that logs to the given framebuffer.
-    pub fn new(framebuffer: &'static mut [u8], info: FrameBufferInfo) -> Self {
-        LockedLogger(Spinlock::new(Logger::new(framebuffer, info)))
-    }
-}
-
 /// This function is called on panic.
 #[panic_handler]
-fn panic(info: &PanicInfo) -> ! {
+pub fn panic(info: &PanicInfo) -> ! {
     match info.message() {
         Some(message) =>
             println!("Error: {}", message),

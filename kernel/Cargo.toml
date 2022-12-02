@@ -6,17 +6,18 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [dependencies]
 bootloader_api = "0.11.0-beta.4"
-bootloader-x86_64-common = "0.11.0-beta.4"
+macros = { path = "../macros" }
 
 # Allocator
 linked_list_allocator = "0.10.4"
 
 # Device specific
 x86_64 = "0.14.10"
+bootloader-x86_64-common = "0.11.0-beta.4"
+
 pic8259 = "0.10.1"
 uart_16550 = "0.2.10"
 pc-keyboard = "0.6.1"
-pci-driver = "0.1.2"
 
 # Logging
 log = "0.4.17"
