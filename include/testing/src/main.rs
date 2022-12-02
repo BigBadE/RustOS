@@ -1,5 +1,7 @@
 #![no_std]
 
-pub fn main() {
+use kernel::println;
 
+pub fn main() {
+    println!("Testing!");
 }
