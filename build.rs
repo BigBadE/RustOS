@@ -1,5 +1,6 @@
-use std::{env, fs, io};
+use std::{env, fs};
 use std::fs::File;
+use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
 fn main() {
@@ -8,18 +9,22 @@ fn main() {
     let kernel = env::var("CARGO_BIN_FILE_KERNEL_kernel").unwrap();
     let kernel = Path::new(&kernel);
 
-    let path = Path::new((out_dir.clone() + "../../include").as_str());
-    let mut file = File::create(path).unwrap();
+    let path = out_dir.clone() + "../../../../include";
+    let path = Path::new(path.as_str());
+    let output = out_dir.clone() + "included";
+    let output = Path::new(output.as_str());
 
-    read_into(PathBuf::from(out_dir + "../../include"), &mut file);
+    let _ = fs::remove_file(output);
+
+    read_into(path.clone().to_path_buf(), &mut File::create(output).unwrap());
 
     // create an UEFI disk image (optional)
     let uefi_path = out_dir.clone() + "/uefi.img";
-    bootloader::UefiBoot::new_including(&kernel, path).create_disk_image(Path::new(&uefi_path)).unwrap();
+    bootloader::UefiBoot::new_including(&kernel, output).create_disk_image(Path::new(&uefi_path)).unwrap();
 
     // create a BIOS disk image (optional)
     let bios_path = out_dir.clone() + "/bios.img";
-    bootloader::BiosBoot::new_including(&kernel, path).create_disk_image(Path::new(&bios_path)).unwrap();
+    bootloader::BiosBoot::new_including(&kernel, output).create_disk_image(Path::new(&bios_path)).unwrap();
 
     // pass the disk image paths as env variables to the `main.rs`
     println!("cargo:rustc-env=UEFI_PATH={}", uefi_path);
@@ -27,12 +32,16 @@ fn main() {
 }
 
 fn read_into(folder: PathBuf, output: &mut File) {
-    for file in fs::read_dir(folder).unwrap() {
+    let mut buffer = Vec::new();
+    for file in fs::read_dir(folder.clone())
+        .expect(format!("Error finding folder: {}", folder.to_str().unwrap()).as_str()) {
         let found = file.unwrap();
         if found.file_type().unwrap().is_dir() {
-            read_into(file.unwrap().path(), output);
+            read_into(found.path(), output);
         } else {
-            io::copy(&mut File::create(found.path()).unwrap(), output).unwrap();
+            buffer.clear();
+            File::open(found.path()).unwrap().read_to_end(&mut buffer).expect("Failed to read file");
+            output.write_all(buffer.as_slice()).expect("Failed to write to file");
         }
     }
 }

@@ -20,13 +20,13 @@ impl LockedLogger {
 
 #[macro_export]
 macro_rules! print {
-    ($($arg:tt)*) => (macros::_print(format_args!($($arg)*)));
+    ($($arg:tt)*) => (kernel::_print(format_args!($($arg)*)));
 }
 
 #[macro_export]
 macro_rules! println {
-    () => (macros::print!("\n"));
-    ($($arg:tt)*) => (macros::print!("{}\n", format_args!($($arg)*)));
+    () => (kernel::print!("\n"));
+    ($($arg:tt)*) => (kernel::print!("{}\n", format_args!($($arg)*)));
 }
 
 #[doc(hidden)]

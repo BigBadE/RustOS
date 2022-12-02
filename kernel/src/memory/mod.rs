@@ -1,6 +1,7 @@
 use bootloader_api::info::MemoryRegions;
 use x86_64::VirtAddr;
-use crate::{BootInfoFrameAllocator, println};
+use crate::println;
+use crate::memory::paging::BootInfoFrameAllocator;
 
 pub mod allocator;
 pub mod paging;

@@ -1,10 +1,9 @@
-use alloc::collections::{BTreeMap, VecDeque};
+use alloc::collections::BTreeMap;
 use alloc::sync::Arc;
 use alloc::task::Wake;
-use core::task::{Context, Poll, RawWaker, Waker};
+use core::task::{Context, Poll, Waker};
 use crossbeam_queue::ArrayQueue;
 use x86_64::instructions::interrupts;
-use crate::threading::task;
 use crate::threading::task::{Task, TaskId};
 
 pub struct Executor {

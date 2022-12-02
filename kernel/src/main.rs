@@ -13,10 +13,14 @@ pub use macros::{print, println};
 mod display;
 mod drivers;
 mod interrupts;
-mod memory;
 mod threading;
+pub mod memory;
 
-extern crate alloc;
+#[allow(unused_imports)]
+#[macro_use]
+pub extern crate macros as kernel;
+
+pub extern crate alloc;
 
 pub const BOOTLOADER_CONFIG: BootloaderConfig = {
     let mut config = BootloaderConfig::new_default();

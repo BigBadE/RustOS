@@ -1,10 +1,20 @@
-#![feature(panic_info_message)]
 #![no_std]
+#![feature(abi_x86_interrupt, panic_info_message, alloc_error_handler, const_mut_refs)]
 
 use core::panic::PanicInfo;
 
+#[allow(unused_imports)]
 #[macro_use]
-extern crate macros;
+pub extern crate macros as kernel;
+pub extern crate alloc;
+
+pub use macros::{print, println, _print};
+
+mod display;
+mod drivers;
+mod interrupts;
+mod threading;
+pub mod memory;
 
 /// This function is called on panic.
 #[panic_handler]
