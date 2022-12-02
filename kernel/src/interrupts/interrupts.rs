@@ -1,7 +1,9 @@
 use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame, PageFaultErrorCode};
 use lazy_static::lazy_static;
+use x86_64::instructions::port::Port;
 use crate::interrupts::pic8259_interrupts;
 use crate::{print, println};
+use crate::drivers::keyboard;
 
 lazy_static! {
     static ref IDT: InterruptDescriptorTable = {
@@ -32,6 +34,7 @@ lazy_static! {
     idt.vmm_communication_exception.set_handler_fn(vmm_communication_handler);
     idt.security_exception.set_handler_fn(security_handler);
     idt[InterruptIndex::Timer.as_usize()].set_handler_fn(timer_interrupt_handler);
+    idt[InterruptIndex::Keyboard.as_usize()].set_handler_fn(keyboard_interrupt_handler);
         return idt;
     };
 }
@@ -159,7 +162,18 @@ extern "x86-interrupt" fn security_handler(stack_frame: InterruptStackFrame, _er
 
 extern "x86-interrupt" fn timer_interrupt_handler(_stack_frame: InterruptStackFrame)
 {
-    print!(".");
+    unsafe {
+        pic8259_interrupts::PICS.lock()
+            .notify_end_of_interrupt(InterruptIndex::Timer.as_u8());
+    }
+}
+
+extern "x86-interrupt" fn keyboard_interrupt_handler(_stack_frame: InterruptStackFrame)
+{
+    let mut port = Port::new(0x60);
+    let scancode: u8 = unsafe { port.read() };
+    keyboard::add_scancode(scancode); // new
+
     unsafe {
         pic8259_interrupts::PICS.lock()
             .notify_end_of_interrupt(InterruptIndex::Timer.as_u8());

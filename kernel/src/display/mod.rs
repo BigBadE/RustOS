@@ -1,5 +1,5 @@
 use bootloader_api::info::FrameBuffer;
-use crate::{LockedLogger, LOGGER};
+use crate::{LockedLogger, LOGGER, println};
 
 pub mod writer;
 
@@ -9,4 +9,5 @@ pub fn init(buffer: &'static mut FrameBuffer) {
         let info = buffer.info();
         LockedLogger::new(buffer.buffer_mut(), info)
     });
+    println!("Setup display");
 }

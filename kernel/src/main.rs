@@ -17,8 +17,9 @@ use crate::memory::paging::BootInfoFrameAllocator;
 
 mod display;
 mod drivers;
-mod memory;
 mod interrupts;
+mod memory;
+mod threading;
 
 extern crate alloc;
 
@@ -62,6 +63,9 @@ fn kernel_main(boot_info: &'static mut bootloader_api::BootInfo) -> ! {
 
     //Setup allocator
     memory::init(*unwrap(&mut boot_info.physical_memory_offset), &boot_info.memory_regions);
+
+    //Run drivers
+    drivers::init();
 
     println!("Going into hlt loop");
     hlt_loop();

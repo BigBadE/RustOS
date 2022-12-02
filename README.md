@@ -15,8 +15,7 @@ installation folder.
 
 - ~~Basic booting~~
 - ~~Hardware interrupts~~
-- Default block ALLOCATOR
-- Backup linked ALLOCATOR
+- ~~Heap allocator~~
 - Async/Await
 - File system
 - Userspace programs
