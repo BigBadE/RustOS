@@ -10,10 +10,6 @@ pub extern crate alloc;
 
 pub use macros::{print, println, _print};
 
-mod display;
-mod drivers;
-mod interrupts;
-mod threading;
 pub mod memory;
 
 /// This function is called on panic.

@@ -2,6 +2,7 @@
 #![no_main]
 #![feature(abi_x86_interrupt, panic_info_message, alloc_error_handler, const_mut_refs)]
 
+use core::borrow::Borrow;
 use core::panic::PanicInfo;
 use bootloader_api::BootloaderConfig;
 use bootloader_api::config::Mapping;
@@ -9,9 +10,12 @@ use bootloader_api::info::Optional;
 use crate::memory::paging::BootInfoFrameAllocator;
 
 pub use macros::{print, println};
+use crate::interrupts::gdt;
 
+mod devices;
 mod display;
 mod drivers;
+mod filesystem;
 mod interrupts;
 mod threading;
 pub mod memory;
@@ -50,6 +54,9 @@ fn kernel_main(boot_info: &'static mut bootloader_api::BootInfo) -> ! {
 
     //Setup allocator
     memory::init(*unwrap(&mut boot_info.physical_memory_offset), &boot_info.memory_regions);
+
+    //Load devices
+    devices::init();
 
     //Run drivers
     drivers::init();
