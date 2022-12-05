@@ -35,6 +35,8 @@ lazy_static! {
     idt.security_exception.set_handler_fn(security_handler);
     idt[InterruptIndex::Timer.as_usize()].set_handler_fn(timer_interrupt_handler);
     idt[InterruptIndex::Keyboard.as_usize()].set_handler_fn(keyboard_interrupt_handler);
+    idt[InterruptIndex::PrimaryATA.as_usize()].set_handler_fn(primary_ata_handler);
+    idt[InterruptIndex::SecondaryATA.as_usize()].set_handler_fn(secondary_ata_handler);
         return idt;
     };
 }
@@ -115,7 +117,7 @@ extern "x86-interrupt" fn invalid_tss_handler(stack_frame: InterruptStackFrame, 
 }
 
 extern "x86-interrupt" fn segment_not_present_handler(stack_frame: InterruptStackFrame, error_code: u64) {
-    println!("Error code: {}", error_code);
+    println!("Error code: {:x}", error_code);
     panic!("EXCEPTION: SEGMENT NOT PRESENT\n{:#?}", stack_frame);
 }
 
@@ -124,7 +126,7 @@ extern "x86-interrupt" fn stack_segment_handler(stack_frame: InterruptStackFrame
 }
 
 extern "x86-interrupt" fn general_protection_handler(stack_frame: InterruptStackFrame, error_code: u64) {
-    println!("ERROR CODE: {}", error_code);
+    println!("ERROR CODE: {:x}", error_code);
     panic!("EXCEPTION: GENERAL PROTECTION FAULT\n{:#?}", stack_frame);
 }
 
@@ -177,5 +179,21 @@ extern "x86-interrupt" fn keyboard_interrupt_handler(_stack_frame: InterruptStac
     unsafe {
         pic8259_interrupts::PICS.lock()
             .notify_end_of_interrupt(InterruptIndex::Timer.as_u8());
+    }
+}
+
+extern "x86-interrupt" fn primary_ata_handler(_stack_frame: InterruptStackFrame)
+{
+    unsafe {
+        pic8259_interrupts::PICS.lock()
+            .notify_end_of_interrupt(InterruptIndex::PrimaryATA.as_u8());
+    }
+}
+
+extern "x86-interrupt" fn secondary_ata_handler(_stack_frame: InterruptStackFrame)
+{
+    unsafe {
+        pic8259_interrupts::PICS.lock()
+            .notify_end_of_interrupt(InterruptIndex::SecondaryATA.as_u8());
     }
 }

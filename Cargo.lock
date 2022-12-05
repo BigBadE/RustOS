@@ -375,6 +375,7 @@ dependencies = [
 name = "kernel"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "bootloader-x86_64-common",
  "bootloader_api",
  "conquer-once",

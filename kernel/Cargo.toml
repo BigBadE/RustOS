@@ -23,6 +23,7 @@ pc-keyboard = "0.6.1"
 log = "0.4.17"
 
 # Helper
+anyhow = { version = "1.0.66", default-features = false }
 lazy_static = { version = "1.0.1", features = ["spin_no_std"] }
 spin = "0.9.4"
 volatile = "0.4.5"

@@ -10,6 +10,7 @@ use bootloader_api::info::Optional;
 use crate::memory::paging::BootInfoFrameAllocator;
 
 pub use macros::{print, println};
+use crate::devices::Devices;
 use crate::interrupts::gdt;
 
 mod devices;
@@ -56,7 +57,8 @@ fn kernel_main(boot_info: &'static mut bootloader_api::BootInfo) -> ! {
     memory::init(*unwrap(&mut boot_info.physical_memory_offset), &boot_info.memory_regions);
 
     //Load devices
-    devices::init();
+    let mut devices = Devices::new();
+    devices.init();
 
     //Run drivers
     drivers::init();
