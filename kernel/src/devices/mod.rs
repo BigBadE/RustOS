@@ -1,6 +1,5 @@
 use alloc::boxed::Box;
 use alloc::vec::Vec;
-use anyhow::Error;
 use x86_64::instructions::port::Port;
 use crate::devices::ata::{ATA, ATAHandler};
 use crate::devices::atapi::ATAPI;
@@ -14,6 +13,8 @@ pub mod pci;
 pub mod pcidevice;
 pub mod sata;
 
+//0: Data, 1: Error / Features, 2: Sector Count, 3: Sector Number
+// 4: Cylinder Low, 5: Cylinder High, 6: Driver / Head, 7: Status / Command
 const PRIMARY_START: u16 = 0x1F0;
 const SECONDARY_START: u16 = 0x170;
 const PRIMARY_CONTROL_REGISTER: u16 = 0x3F6;
@@ -64,7 +65,7 @@ impl Devices {
 
     pub fn detect_ata_mode(&mut self, primary: bool, master: bool) {
         //Detect start address
-        let mut start;
+        let start;
         if primary {
             start = PRIMARY_START;
         } else {
@@ -137,7 +138,7 @@ impl Devices {
             } else if ata_values.0 == 0x3c && ata_values.1 == 0xc3 {
                 self.drives.push(Box::new(SATA::new()));
             } else {
-                self.drives.push(Box::new(ATA::new(lba48)));
+                self.drives.push(Box::new(ATA::new(lba48, primary, master)));
             }
         }
     }

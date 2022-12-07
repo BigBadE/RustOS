@@ -1,12 +1,15 @@
 pub struct ATA {
-    lba48: bool
+    lba48: bool,
+    primary: bool,
+    master: bool
 }
 
 impl ATA {
-    pub fn new(lba48: bool) -> Self {
-        println!("LBA? {}", lba48);
+    pub fn new(lba48: bool, primary: bool, master: bool) -> Self {
         return ATA {
-            lba48
+            lba48,
+            primary,
+            master
         }
     }
 }
