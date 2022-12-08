@@ -17,8 +17,8 @@ pub mod sata;
 // 4: Cylinder Low, 5: Cylinder High, 6: Driver / Head, 7: Status / Command
 const PRIMARY_START: u16 = 0x1F0;
 const SECONDARY_START: u16 = 0x170;
-const PRIMARY_CONTROL_REGISTER: u16 = 0x3F6;
-const SECONDARY_CONTROL_REGISTER: u16 = 0x376;
+//const PRIMARY_CONTROL_REGISTER: u16 = 0x3F6;
+//const SECONDARY_CONTROL_REGISTER: u16 = 0x376;
 
 pub struct Devices {
     pub pci: Vec<PCIDevice>,
@@ -40,9 +40,9 @@ impl Devices {
         for i in 0..=255 {
             for j in 0..32 {
                 let output = pci.config_read(i, j, 0, 0);
-                let second = pci.config_read(i, j, 0, 0x4);
-                let third = pci.config_read(i, j, 0, 0x8);
-                let last = pci.config_read(i, j, 0, 0xC);
+                //let second = pci.config_read(i, j, 0, 0x4);
+                //let third = pci.config_read(i, j, 0, 0x8);
+                //let last = pci.config_read(i, j, 0, 0xC);
                 if output & 0xFFFF != 0xFFFF {
                     self.pci.push(PCIDevice::new());
                     /*println!("Vender: {:x}, Device: {:x}, Status: {:x}, Command: {:x}\

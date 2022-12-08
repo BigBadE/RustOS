@@ -1,4 +1,4 @@
-use alloc::collections::BTreeMap;
+use alloc::collections::btree_map::BTreeMap;
 use alloc::sync::Arc;
 use alloc::task::Wake;
 use core::task::{Context, Poll, Waker};
@@ -73,6 +73,8 @@ impl Executor {
         }
     }
 }
+
+unsafe impl Send for Executor {}
 
 struct TaskWaker {
     task_id: TaskId,

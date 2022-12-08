@@ -1,9 +1,16 @@
+use alloc::boxed::Box;
 use x86_64::structures::idt::{InterruptDescriptorTable, InterruptStackFrame, PageFaultErrorCode};
 use lazy_static::lazy_static;
 use x86_64::instructions::port::Port;
 use crate::interrupts::pic8259_interrupts;
 use crate::println;
-use crate::drivers::keyboard;
+use alloc::vec::Vec;
+
+//All writes MUST be in the main thread.
+//Is this jank? Yes, but there's no reason to write from any other thread, and it prevents deadlocks.
+pub static mut INTERRUPTS: [Vec<Box<fn(u8)>>; 16] = [Vec::new(), Vec::new(),
+    Vec::new(), Vec::new(), Vec::new(), Vec::new(), Vec::new(), Vec::new(), Vec::new(), Vec::new(),
+    Vec::new(), Vec::new(), Vec::new(), Vec::new(), Vec::new(), Vec::new()];
 
 lazy_static! {
     static ref IDT: InterruptDescriptorTable = {
@@ -130,7 +137,8 @@ extern "x86-interrupt" fn general_protection_handler(stack_frame: InterruptStack
     panic!("EXCEPTION: GENERAL PROTECTION FAULT\n{:#?}", stack_frame);
 }
 
-extern "x86-interrupt" fn page_fault_handler(stack_frame: InterruptStackFrame, _error_code: PageFaultErrorCode) {
+extern "x86-interrupt" fn page_fault_handler(stack_frame: InterruptStackFrame, error_code: PageFaultErrorCode) {
+    println!("ERROR CODE: {:x}", error_code.bits());
     panic!("EXCEPTION: PAGE FAULT\n{:#?}", stack_frame);
 }
 
@@ -164,6 +172,11 @@ extern "x86-interrupt" fn security_handler(stack_frame: InterruptStackFrame, _er
 
 extern "x86-interrupt" fn timer_interrupt_handler(_stack_frame: InterruptStackFrame)
 {
+    print!(".");
+    for callback in unsafe { INTERRUPTS[0].as_slice() } {
+        callback(0);
+    }
+
     unsafe {
         pic8259_interrupts::PICS.lock()
             .notify_end_of_interrupt(InterruptIndex::Timer.as_u8());
@@ -172,18 +185,27 @@ extern "x86-interrupt" fn timer_interrupt_handler(_stack_frame: InterruptStackFr
 
 extern "x86-interrupt" fn keyboard_interrupt_handler(_stack_frame: InterruptStackFrame)
 {
+    print!("-");
     let mut port = Port::new(0x60);
     let scancode: u8 = unsafe { port.read() };
-    keyboard::add_scancode(scancode); // new
+
+    for callback in unsafe { INTERRUPTS[1].as_slice() } {
+        callback(scancode);
+    }
 
     unsafe {
         pic8259_interrupts::PICS.lock()
-            .notify_end_of_interrupt(InterruptIndex::Timer.as_u8());
+            .notify_end_of_interrupt(InterruptIndex::Keyboard.as_u8());
     }
 }
 
 extern "x86-interrupt" fn primary_ata_handler(_stack_frame: InterruptStackFrame)
 {
+    println!("Primary ata");
+    for callback in unsafe { INTERRUPTS[14].as_slice() } {
+        callback(0);
+    }
+
     unsafe {
         pic8259_interrupts::PICS.lock()
             .notify_end_of_interrupt(InterruptIndex::PrimaryATA.as_u8());
@@ -192,6 +214,11 @@ extern "x86-interrupt" fn primary_ata_handler(_stack_frame: InterruptStackFrame)
 
 extern "x86-interrupt" fn secondary_ata_handler(_stack_frame: InterruptStackFrame)
 {
+    println!("Secondary ata");
+    for callback in unsafe { INTERRUPTS[15].as_slice() } {
+        callback(0);
+    }
+
     unsafe {
         pic8259_interrupts::PICS.lock()
             .notify_end_of_interrupt(InterruptIndex::SecondaryATA.as_u8());
