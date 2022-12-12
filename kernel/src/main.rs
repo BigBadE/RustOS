@@ -63,11 +63,16 @@ fn kernel_main(boot_info: &'static mut bootloader_api::BootInfo) -> ! {
     //Run drivers
     //drivers::init();
 
-    println!("Saving state");
-    helper::save_state(testing, 100);
+    //helper::save_state(testing, 100);
+
+    testing_stack();
 
     println!("Going into hlt loop");
     hlt_loop();
+}
+
+fn testing_stack() {
+
 }
 
 pub fn testing(state: SavedState, arg: u8) {

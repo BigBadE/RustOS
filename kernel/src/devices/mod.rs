@@ -138,7 +138,7 @@ impl Devices {
             } else if ata_values.0 == 0x3c && ata_values.1 == 0xc3 {
                 self.drives.push(Box::new(SATA::new()));
             } else {
-                self.drives.push(Box::new(ATA::new(lba48, primary, master)));
+                self.drives.push(Box::new(ATA::new(lba48, primary, master, sectors)));
             }
         }
     }
